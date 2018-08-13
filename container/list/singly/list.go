@@ -33,6 +33,26 @@ func InsertAt(val int, at *ListNode) *ListNode {
 	return at.Next
 }
 
+// Remove removes the specified node.
+func Remove(node *ListNode) {
+	if node == nil {
+		return
+	}
+
+	if node.Next != nil {
+		oldNext := node.Next
+
+		node.Value = oldNext.Value
+		node.Next = oldNext.Next
+
+		oldNext.Value = 0
+		oldNext.Next = nil
+	} else {
+		node.Value = 0
+		node.Next = nil
+	}
+}
+
 func insert(val int, at *ListNode) int {
 	if at.Next == nil {
 		next := new(ListNode)
