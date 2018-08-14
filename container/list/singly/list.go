@@ -6,20 +6,16 @@ type ListNode struct {
 	Next  *ListNode
 }
 
-// NewList creates a new node.
-func NewList() *ListNode {
-	return new(ListNode)
+// NewListNode creates a new node with val.
+func NewListNode(val int) *ListNode {
+	return &ListNode{
+		Value: val,
+	}
 }
 
 // NextNode returns the node after the ln.
 func (ln *ListNode) NextNode() *ListNode {
 	return ln.Next
-}
-
-// PushFront pushes val to the top of the list and return val.
-func (ln *ListNode) PushFront(val int) int {
-	ln.Value = val
-	return val
 }
 
 // InsertAfter inserts the node with val after ln and return val.
