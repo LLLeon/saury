@@ -51,12 +51,12 @@ func Remove(node *ListNode) {
 
 func insert(val int, at *ListNode) int {
 	if at.Next == nil {
-		next := new(ListNode)
+		next := &ListNode{}
 		next.Value = val
 		at.Next = next
 	} else {
 		oldNext := at.Next
-		newNext := new(ListNode)
+		newNext := &ListNode{}
 
 		newNext.Value = val
 		newNext.Next = oldNext
