@@ -63,4 +63,19 @@ func TestLRUCache(t *testing.T) {
 		t.Errorf("cache logic error, want: %v, get: %v\n", value4, v4)
 	}
 	t.Logf("case 5 success, want: %v, get: %v\n", value4, v4)
+
+	// case 6: "value1" should no longer be in the cache.
+	if v, exists := lru.Get("k1"); exists {
+		t.Errorf("the value is not deleted, v: %v\n", v)
+	} else {
+		t.Log("case 6 success.")
+	}
+
+	count := lru.GetCount()
+	size := lru.GetSize()
+	if count != size {
+		t.Errorf("the number of nodes does not match the capacity, want: %v, get: %v\n", size, count)
+	} else {
+		t.Log("orrect number of nodes")
+	}
 }
