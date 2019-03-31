@@ -39,6 +39,10 @@ type LRUCache struct {
 
 // NewLRUCache returns a LRUCache with a specified capacity.
 func NewLRUCache(size int) *LRUCache {
+	if size <= 0 {
+		return nil
+	}
+
 	head := NewLinkedNode(linkedHead, nil)
 	head.pre = nil
 
@@ -68,26 +72,45 @@ func (lc *LRUCache) Set(k string, v interface{}) bool {
 		return false
 	}
 
-	lhead := lc.cache[linkedHead]
-	ltail := lc.cache[linkedTail]
-	head := NewLinkedNode(k, v)
+	var (
+		newHead  *LinkedNode
+		exists   bool
+		isUpdate bool
+		lhead    = lc.cache[linkedHead]
+		ltail    = lc.cache[linkedTail]
+	)
+
+	// If the key you want to set exists, remove it from its
+	// original location and put it in the head of the linked list.
+	newHead, exists = lc.cache[k]
+	if exists {
+		originalPre := newHead.pre
+		originalPre.next = newHead.next
+		newHead.next.pre = originalPre
+
+		// update original value
+		newHead.value = v
+		isUpdate = true
+	} else {
+		newHead = NewLinkedNode(k, v)
+	}
 
 	// Special handling is required when there are no
 	// nodes in the linked list.
 	if lc.count == 0 {
-		lhead.next = head
-		head.pre = lhead
-		head.next = ltail
-		ltail.pre = head
+		lhead.next = newHead
+		newHead.pre = lhead
+		newHead.next = ltail
+		ltail.pre = newHead
 
-		lc.cache[k] = head
+		lc.cache[k] = newHead
 		lc.count++
 		return true
 	}
 
-	// When the cache is full, delete the tail node and
-	// put the new node in the head.
-	if lc.count == lc.size {
+	// When the cache is full and not updating old values,
+	// delete the tail node and put the new node in the head.
+	if lc.count == lc.size && !isUpdate {
 		nodeRemove := ltail.pre
 		nodeRemove.pre.next = ltail
 		ltail.pre = nodeRemove.pre
@@ -96,25 +119,16 @@ func (lc *LRUCache) Set(k string, v interface{}) bool {
 		lc.count--
 	}
 
-	// If the key you want to set exists, remove it from its
-	// original location and put it in the head of the linked list.
-	if originalNode, exist := lc.cache[k]; exist {
-		originalPre := originalNode.pre
-		originalPre.next = originalNode.next
-		originalNode.next.pre = originalPre
-		originalNode = nil
-	}
-
+	// Insert a new node in the head of the linked list.
 	oldHead := lhead.next
-	lhead.next = head
-	head.pre = lhead
-	head.next = oldHead.next
-	oldHead.next.pre = head
-	oldHead = nil
+	lhead.next = newHead
+	newHead.pre = lhead
+	newHead.next = oldHead
+	oldHead.pre = newHead
 
-	lc.cache[k] = head
+	// Don't forget to cache the node.
+	lc.cache[k] = newHead
 	lc.count++
-
 	return true
 }
 
@@ -154,6 +168,19 @@ func (lc *LRUCache) Get(k string) (interface{}, bool) {
 	oldHead.pre = dstNode
 
 	return v, true
+}
+
+// GetHeadValue returns the value of the linked list header node.
+func (lc *LRUCache) GetHeadValue() interface{} {
+	lc.lock.Lock()
+	defer lc.lock.Unlock()
+
+	if lc.count == 0 {
+		return nil
+	}
+
+	headValue := lc.cache[linkedHead].next.value
+	return headValue
 }
 
 // GetCount returns the number of nodes in the cache.
