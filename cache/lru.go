@@ -1,6 +1,8 @@
 package cache
 
-import "sync"
+import (
+	"sync"
+)
 
 const (
 	// linkedHead and linkedTail represents the head
@@ -70,6 +72,19 @@ func (lc *LRUCache) Set(k string, v interface{}) bool {
 	ltail := lc.cache[linkedTail]
 	head := NewLinkedNode(k, v)
 
+	// Special handling is required when there are no
+	// nodes in the linked list.
+	if lc.count == 0 {
+		lhead.next = head
+		head.pre = lhead
+		head.next = ltail
+		ltail.pre = head
+
+		lc.cache[k] = head
+		lc.count++
+		return true
+	}
+
 	// When the cache is full, delete the tail node and
 	// put the new node in the head.
 	if lc.count == lc.size {
@@ -88,6 +103,7 @@ func (lc *LRUCache) Set(k string, v interface{}) bool {
 	oldHead.next.pre = head
 	oldHead = nil
 
+	lc.cache[k] = head
 	lc.count++
 
 	return true
@@ -102,7 +118,11 @@ func (lc *LRUCache) Get(k string) (interface{}, bool) {
 		return nil, false
 	}
 
-	dstNode := lc.cache[k]
+	dstNode, ok := lc.cache[k]
+	if !ok {
+		return nil, false
+	}
+
 	v := dstNode.value
 	lhead := lc.cache[linkedHead]
 
