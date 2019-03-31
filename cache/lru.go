@@ -96,6 +96,15 @@ func (lc *LRUCache) Set(k string, v interface{}) bool {
 		lc.count--
 	}
 
+	// If the key you want to set exists, remove it from its
+	// original location and put it in the head of the linked list.
+	if originalNode, exist := lc.cache[k]; exist {
+		originalPre := originalNode.pre
+		originalPre.next = originalNode.next
+		originalNode.next.pre = originalPre
+		originalNode = nil
+	}
+
 	oldHead := lhead.next
 	lhead.next = head
 	head.pre = lhead
@@ -145,4 +154,16 @@ func (lc *LRUCache) Get(k string) (interface{}, bool) {
 	oldHead.pre = dstNode
 
 	return v, true
+}
+
+// GetCount returns the number of nodes in the cache.
+func (lc *LRUCache) GetCount() int {
+	lc.lock.Lock()
+	defer lc.lock.Unlock()
+	return lc.count
+}
+
+// GetSize returns the size of the cache.
+func (lc *LRUCache) GetSize() int {
+	return lc.size
 }
