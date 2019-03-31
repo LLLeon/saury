@@ -88,6 +88,9 @@ func (lc *LRUCache) Set(k string, v interface{}) bool {
 		originalPre.next = newHead.next
 		newHead.next.pre = originalPre
 
+		// Temporarily subtract 1 number of nodes.
+		lc.count--
+
 		// update original value
 		newHead.value = v
 		isUpdate = true
@@ -114,8 +117,9 @@ func (lc *LRUCache) Set(k string, v interface{}) bool {
 		nodeRemove := ltail.pre
 		nodeRemove.pre.next = ltail
 		ltail.pre = nodeRemove.pre
-		nodeRemove = nil
 
+		delete(lc.cache, nodeRemove.key)
+		nodeRemove = nil
 		lc.count--
 	}
 
